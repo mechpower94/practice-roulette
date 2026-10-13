@@ -1,0 +1,10 @@
+# 비밀 토큰 — 절대 커밋 금지
+.env
+.env.*
+!.env.example
+
+# 배포 도구가 만드는 로컬 파일
+.vercel/
+web/.vercel/
+.service-url
+node_modules/

@@ -1,0 +1,23 @@
+name: practice-roulette
+
+services:
+  app:
+    build: ./docker
+    image: practice-roulette-dev
+    init: true                # 종료 신호(SIGTERM)를 스크립트까지 전달 → 클라우드 정리 실행
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      SERVICE_TTL_MINUTES: ${SERVICE_TTL_MINUTES:-60}
+    volumes:
+      - ./:/workspace         # 프로젝트 폴더만 공유
+      - state:/state          # 배포 상태(프로젝트 ID 등)는 도커 볼륨에만 저장
+    ports:
+      - "127.0.0.1:3000:3000" # 로컬 미리보기 http://localhost:3000
+    stop_grace_period: 2m     # 종료 시 Vercel 삭제·Supabase 일시정지할 시간 확보
+    restart: "no"
+    command: ["up"]
+
+volumes:
+  state:

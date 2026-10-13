@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>오늘 뭐 먹지? · 점심 룰렛</title>
+  <meta name="description" content="버튼 한 번으로 점심 메뉴 결정! 팀원들과 투표하고 오늘의 인기 메뉴 TOP 5를 확인하세요.">
+  <meta property="og:title" content="오늘 뭐 먹지? 🍽️ 점심 룰렛">
+  <meta property="og:description" content="룰렛 돌리고, 투표하고, 오늘의 인기 메뉴 TOP 5 확인!">
+  <meta name="theme-color" content="#ff8a65">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="expiry-banner" class="banner" hidden></div>
+
+  <main class="app">
+    <header class="hero">
+      <div class="hero-top">
+        <span class="chip" id="team-chip">👥 <b id="team-name">전체</b>
+          <button id="team-change" class="link-btn" type="button">팀 바꾸기</button>
+        </span>
+        <button id="sound" class="icon-btn" type="button" aria-label="효과음 켜기/끄기">🔊</button>
+      </div>
+      <h1>오늘 뭐 먹지?</h1>
+      <p class="weather">
+        <span id="weather">🌤️ 날씨 확인 중…</span>
+        <button id="locate" class="link-btn" type="button">📍 내 위치</button>
+      </p>
+    </header>
+
+    <section class="card wheel-card">
+      <div class="moods" id="moods" role="group" aria-label="오늘의 기분"></div>
+      <div class="wheel-wrap">
+        <div class="pointer" aria-hidden="true"></div>
+        <canvas id="wheel" aria-label="점심 메뉴 룰렛"></canvas>
+        <button id="spin" class="spin-btn" type="button">돌리기!</button>
+      </div>
+      <p class="hint" id="hint"></p>
+    </section>
+
+    <section class="card result" id="result" hidden aria-live="polite">
+      <div class="result-emoji" id="result-emoji"></div>
+      <h2 id="result-name"></h2>
+      <p class="result-comment" id="result-comment"></p>
+      <div class="actions">
+        <button id="vote" class="btn primary" type="button">이걸로 결정! 🗳️</button>
+        <button id="respin" class="btn ghost" type="button">🔄 다시 돌리기</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>🏆 오늘의 인기 메뉴 TOP 5</h2>
+        <span class="muted small" id="total"></span>
+      </div>
+      <ol class="ranking" id="ranking"></ol>
+      <p class="muted small" id="rank-note"></p>
+    </section>
+
+    <section class="card">
+      <details id="editor">
+        <summary>🍱 메뉴 편집 <span class="muted small" id="menu-count"></span></summary>
+        <ul class="menu-list" id="menu-list"></ul>
+        <form id="add-form" class="add-form">
+          <input id="add-name" maxlength="20" placeholder="메뉴 이름 (예: 부대찌개)" required autocomplete="off">
+          <select id="add-tag" aria-label="메뉴 종류">
+            <option value="">종류 없음</option>
+            <option value="국물">🥣 국물</option>
+            <option value="매운">🌶️ 매운</option>
+            <option value="가벼운">🥗 가벼운</option>
+            <option value="든든">💪 든든</option>
+          </select>
+          <button class="btn small-btn" type="submit">추가</button>
+        </form>
+        <button id="reset-menus" class="link-btn" type="button">기본 메뉴로 되돌리기</button>
+      </details>
+    </section>
+
+    <section class="card">
+      <h2>🕘 최근 룰렛 기록</h2>
+      <ul class="history" id="history"></ul>
+    </section>
+
+    <section class="card share">
+      <h2>📣 친구 초대하기</h2>
+      <p class="muted small">QR을 찍거나 링크를 단톡방에 공유해 같이 투표해요.</p>
+      <div id="qr" class="qr" aria-label="현재 페이지 QR 코드"></div>
+      <div class="actions">
+        <button id="copy" class="btn" type="button">🔗 링크 복사</button>
+        <button id="native-share" class="btn ghost" type="button" hidden>📤 공유하기</button>
+      </div>
+    </section>
+
+    <footer class="muted small">
+      <span id="mode-note"></span><br>
+      공부용 실습 서비스 · Vercel Hobby + Supabase Free (0원)
+    </footer>
+  </main>
+
+  <div class="closed" id="closed" hidden>
+    <div class="closed-box">
+      <div class="result-emoji">🔒</div>
+      <h2>서비스가 종료되었어요</h2>
+      <p class="muted">실습용 서비스라 정해진 시간이 지나면 자동으로 닫혀요.<br>맛있는 점심 드세요! 🍚</p>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
+  <script src="script.js" defer></script>
+</body>
+</html>
